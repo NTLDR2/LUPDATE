@@ -1,0 +1,16 @@
+C:\SOFTDEV\spyscalp\lupdate\obj\x86\Release\LUPDATE.csprojResolveAssemblyReference.cache
+C:\SOFTDEV\spyscalp\lupdate\obj\x86\Release\MainWindow.baml
+C:\SOFTDEV\spyscalp\lupdate\obj\x86\Release\MainWindow.g.cs
+C:\SOFTDEV\spyscalp\lupdate\obj\x86\Release\App.g.cs
+C:\SOFTDEV\spyscalp\lupdate\obj\x86\Release\LUPDATE_MarkupCompile.cache
+C:\SOFTDEV\spyscalp\lupdate\obj\x86\Release\LUPDATE.g.resources
+C:\SOFTDEV\spyscalp\lupdate\bin\Release\LUPDATE.conf
+C:\SOFTDEV\spyscalp\lupdate\bin\Release\LUPDATE.exe
+C:\SOFTDEV\spyscalp\lupdate\bin\Release\LUPDATE.pdb
+C:\SOFTDEV\spyscalp\lupdate\obj\x86\Release\LUPDATE.exe
+C:\SOFTDEV\spyscalp\lupdate\obj\x86\Release\LUPDATE.pdb
+C:\SOFTDEV\spyscalp\lupdate\obj\x86\Release\AboutWindow.baml
+C:\SOFTDEV\spyscalp\lupdate\obj\x86\Release\App.baml
+C:\SOFTDEV\spyscalp\lupdate\obj\x86\Release\AboutWindow.g.cs
+C:\SOFTDEV\spyscalp\lupdate\obj\x86\Release\OptionsWindow.baml
+C:\SOFTDEV\spyscalp\lupdate\obj\x86\Release\OptionsWindow.g.cs

@@ -1,0 +1,114 @@
+<Window x:Class="LUpdate.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="LiveUpdate" Height="441" Width="600"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+        Icon="pack://application:,,,/LUPDATE.ico" Background="#F0F0F0">
+    <Grid Height="394">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Menu -->
+            <RowDefinition Height="*"/>    <!-- Main -->
+        </Grid.RowDefinitions>
+
+        <!-- Menu Bar -->
+        <Menu Grid.Row="0">
+            <MenuItem Header="File">
+                <MenuItem Header="Save Update Log..." Click="OnSaveLog">
+                    <MenuItem.Icon>
+                        <Image Source="pack://application:,,,/ico_save.png"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="Exit" Click="btnExit_Click">
+                    <MenuItem.Icon>
+                        <Image Source="pack://application:,,,/ico_exit.png"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="Options" Click="OnOptionsClick">
+                <MenuItem.Icon>
+                    <Image Source="pack://application:,,,/ico_options.png"/>
+                </MenuItem.Icon>
+                <MenuItem Header="Expert Mode" Click="OnModeToggle"/>
+            </MenuItem>
+            <MenuItem Header="Help">
+                <MenuItem.Icon>
+                    <Image Source="pack://application:,,,/ico_help.png"/>
+                </MenuItem.Icon>
+                <MenuItem Header="About LiveUpdate" Click="OnAboutClick"/>
+            </MenuItem>
+            <MenuItem Header="v0.1.0" IsEnabled="False" HorizontalAlignment="Right"/>
+        </Menu>
+
+        <Grid Grid.Row="1" Height="375">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="175"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Sidebar / Wizard Graphics -->
+            <!-- Image Source updated dynamically by logic -->
+            <Image Grid.Column="0" x:Name="imgWizard" Source="pack://application:,,,/lupdate-welcome.png" Stretch="UniformToFill" VerticalAlignment="Top" Width="175" Height="375" />
+
+            <!-- Main Content Area -->
+            <Grid Grid.Column="1" Margin="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Header -->
+                    <RowDefinition Height="*"/>    <!-- Content -->
+                    <RowDefinition Height="Auto"/> <!-- Footer -->
+                </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                <TextBlock Text="Welcome to LiveUpdate Express" FontSize="18" FontWeight="Bold" Foreground="#333"/>
+                <TextBlock Text="LiveUpdate Status" FontSize="12" Foreground="#666" Margin="0,5,0,0"/>
+            </StackPanel>
+
+            <!-- Mode: Wizard (List) -->
+            <Border Grid.Row="1" x:Name="pnlWizard" Visibility="Visible" Background="White" BorderBrush="#999" BorderThickness="1" CornerRadius="0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="stkProducts" Margin="5">
+                        <TextBlock Text="Scanning for installed components..." Margin="5"/>
+                        <!-- Items will be added here dynamically -->
+                        <CheckBox IsChecked="True" IsEnabled="False" Content="SPYSCALP Trading System" Margin="5"/>
+                        <CheckBox IsChecked="True" IsEnabled="False" Content="LUPDATE Utility" Margin="5"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Mode: Expert (Log) -->
+            <Border Grid.Row="1" x:Name="pnlExpert" Visibility="Collapsed" Background="White" BorderBrush="#999" BorderThickness="1">
+                 <ScrollViewer x:Name="scrollLog">
+                    <TextBlock x:Name="txtLog" FontFamily="Consolas" FontSize="11" Foreground="#333" Padding="5" TextWrapping="Wrap"/>
+                 </ScrollViewer>
+            </Border>
+            
+            <!-- Progress Overlay -->
+            <StackPanel Grid.Row="1" VerticalAlignment="Bottom" Background="#F0F0F0" Margin="0,10,0,0">
+                <TextBlock x:Name="lblStatus" Text="Ready to Update." Margin="0,0,0,5"/>
+                <ProgressBar x:Name="progressBar" Height="15" Minimum="0" Maximum="100"/>
+            </StackPanel>
+
+            <!-- Footer / Controls -->
+            <Grid Grid.Row="2" Margin="0,15,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" VerticalAlignment="Bottom">
+                    <Hyperlink Click="OnModeToggle">
+                        <TextBlock x:Name="linkMode" Text="Switch to Expert Mode"/>
+                    </Hyperlink>
+                </TextBlock>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button x:Name="btnNext" Content="Next >" Width="75" Height="23" Margin="0,0,10,0" Click="btnCheck_Click"/>
+                    <Button x:Name="btnCancel" IsCancel="True" Content="Cancel" Width="75" Height="23" Click="btnExit_Click"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Grid>
+</Grid>
+</Window>
