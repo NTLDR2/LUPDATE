@@ -3,112 +3,179 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="LiveUpdate" Height="441" Width="600"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
-        Icon="pack://application:,,,/LUPDATE.ico" Background="#F0F0F0">
-    <Grid Height="394">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Menu -->
-            <RowDefinition Height="*"/>    <!-- Main -->
-        </Grid.RowDefinitions>
+        Icon="pack://application:,,,/Graphics/LUPDATE.ico"
+        Background="#F0F0F0"
+        FontFamily="Tahoma" FontSize="12"
+        FlowDirection="LeftToRight">
 
-        <!-- Menu Bar -->
-        <Menu Grid.Row="0">
-            <MenuItem Header="File">
-                <MenuItem Header="Save Update Log..." Click="OnSaveLog">
+    <Window.Resources>
+        <!-- =============================================================
+             VS2010-style Color Palette (ported from RDAS101)
+             These brushes create a cohesive Visual Studio-like look
+             across the status bar and content panels.
+             Menu/MenuItem/Toolbar styles are in Styles/VS2010MenuStyles.xaml
+             (loaded via App.xaml).
+             ============================================================= -->
+        <SolidColorBrush x:Key="VsBrush.Window"                    Color="#FF293955"/>
+        <SolidColorBrush x:Key="VsBrush.Background"                Color="#FFCFD6E5"/>
+        <SolidColorBrush x:Key="VsBrush.CommandBar.GradientStart"  Color="#FFDEE8F5"/>
+        <SolidColorBrush x:Key="VsBrush.CommandBar.GradientEnd"    Color="#FFC3D9EB"/>
+        <SolidColorBrush x:Key="VsBrush.Border"                    Color="#FF8E9DAD"/>
+        <SolidColorBrush x:Key="VsBrush.Panel"                     Color="White"/>
+        <SolidColorBrush x:Key="VsBrush.Text"                      Color="Black"/>
+    </Window.Resources>
+
+    <!-- ===============================================================
+         DockPanel Layout (ported from RDAS101)
+         Top: Menu bar (gradient background, naturally fills width)
+         Bottom: Status bar (with accent border)
+         Center: Main content (wizard/expert panels)
+         =============================================================== -->
+    <DockPanel Background="{StaticResource VsBrush.Background}">
+
+        <!-- ── Menu Bar (styled via Window.Resources Menu Style) ──── -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Save Update Log..." Click="OnSaveLog">
                     <MenuItem.Icon>
-                        <Image Source="pack://application:,,,/ico_save.png"/>
+                        <Image Source="pack://application:,,,/Graphics/ico_save.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator/>
-                <MenuItem Header="Exit" Click="btnExit_Click">
+                <MenuItem Header="E_xit" Click="btnExit_Click">
                     <MenuItem.Icon>
-                        <Image Source="pack://application:,,,/ico_exit.png"/>
+                        <Image Source="pack://application:,,,/Graphics/ico_exit.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
-            <MenuItem Header="Options" Click="OnOptionsClick">
+            <MenuItem Header="_Options">
                 <MenuItem.Icon>
-                    <Image Source="pack://application:,,,/ico_options.png"/>
+                    <Image Source="pack://application:,,,/Graphics/ico_options.png"/>
                 </MenuItem.Icon>
                 <MenuItem Header="Expert Mode" Click="OnModeToggle"/>
+                <MenuItem Header="Preferences..." Click="OnOptionsClick"/>
             </MenuItem>
-            <MenuItem Header="Help">
+            <MenuItem Header="_Test UI">
+                <MenuItem Header="Update Available Window" Click="OnTestUpdateAvailable"/>
+                <MenuItem Header="Download Progress Window" Click="OnTestDownloadProgress"/>
+                <MenuItem Header="Checking for Updates Window" Click="OnTestCheckingForUpdates"/>
+                <Separator/>
+                <MenuItem Header="Toast Notification" Click="OnTestToast"/>
+                <Separator/>
+                <MenuItem Header="Version Is Up To Date" Click="OnTestVersionUpToDate"/>
+                <MenuItem Header="Version Skipped By User" Click="OnTestVersionSkipped"/>
+                <MenuItem Header="Unknown Installer Format" Click="OnTestUnknownInstaller"/>
+                <MenuItem Header="Cannot Download Appcast" Click="OnTestCannotDownloadAppcast"/>
+                <MenuItem Header="Download Error" Click="OnTestDownloadError"/>
+            </MenuItem>
+            <MenuItem Header="_Help">
                 <MenuItem.Icon>
-                    <Image Source="pack://application:,,,/ico_help.png"/>
+                    <Image Source="pack://application:,,,/Graphics/ico_help.png"/>
                 </MenuItem.Icon>
-                <MenuItem Header="About LiveUpdate" Click="OnAboutClick"/>
+                <MenuItem Header="_About LiveUpdate" Click="OnAboutClick"/>
             </MenuItem>
-            <MenuItem Header="v0.1.0" IsEnabled="False" HorizontalAlignment="Right"/>
         </Menu>
 
-        <Grid Grid.Row="1" Height="375">
+        <!-- ── Status Bar (ported from RDAS101) ─────────────────────
+             Sits at the bottom with a VS-style gradient and border.
+             Shows a status light (green/gray ellipse) + status text.
+             ───────────────────────────────────────────────────────── -->
+        <StatusBar DockPanel.Dock="Bottom" Height="25"
+                   Background="{StaticResource VsBrush.CommandBar.GradientStart}"
+                   BorderBrush="{StaticResource VsBrush.Border}" BorderThickness="0,1,0,0">
+            <StatusBarItem>
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse x:Name="statusLight" Width="10" Height="10" Fill="Gray" Margin="0,0,5,0"/>
+                    <TextBlock x:Name="lblStatus" Text="Ready to Update."/>
+                </StackPanel>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock Text="v0.2.0" Foreground="DarkGray" Margin="0,0,10,0"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <!-- ── Main Content ─────────────────────────────────────── -->
+        <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="175"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <!-- Sidebar / Wizard Graphics -->
-            <!-- Image Source updated dynamically by logic -->
-            <Image Grid.Column="0" x:Name="imgWizard" Source="pack://application:,,,/lupdate-welcome.png" Stretch="UniformToFill" VerticalAlignment="Top" Width="175" Height="375" />
+            <Image Grid.Column="0" x:Name="imgWizard"
+                   Source="pack://application:,,,/Graphics/lupdate-welcome.png"
+                   Stretch="UniformToFill" VerticalAlignment="Top"
+                   Width="175" Height="375" />
 
             <!-- Main Content Area -->
             <Grid Grid.Column="1" Margin="20">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/> <!-- Header -->
-                    <RowDefinition Height="*"/>    <!-- Content -->
-                    <RowDefinition Height="Auto"/> <!-- Footer -->
+                    <RowDefinition Height="Auto"/>  <!-- Header -->
+                    <RowDefinition Height="*"/>     <!-- Content -->
+                    <RowDefinition Height="Auto"/>  <!-- Footer -->
                 </Grid.RowDefinitions>
 
-            <!-- Header -->
-            <StackPanel Grid.Row="0" Margin="0,0,0,15">
-                <TextBlock Text="Welcome to LiveUpdate Express" FontSize="18" FontWeight="Bold" Foreground="#333"/>
-                <TextBlock Text="LiveUpdate Status" FontSize="12" Foreground="#666" Margin="0,5,0,0"/>
-            </StackPanel>
-
-            <!-- Mode: Wizard (List) -->
-            <Border Grid.Row="1" x:Name="pnlWizard" Visibility="Visible" Background="White" BorderBrush="#999" BorderThickness="1" CornerRadius="0">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel x:Name="stkProducts" Margin="5">
-                        <TextBlock Text="Scanning for installed components..." Margin="5"/>
-                        <!-- Items will be added here dynamically -->
-                        <CheckBox IsChecked="True" IsEnabled="False" Content="SPYSCALP Trading System" Margin="5"/>
-                        <CheckBox IsChecked="True" IsEnabled="False" Content="LUPDATE Utility" Margin="5"/>
-                    </StackPanel>
-                </ScrollViewer>
-            </Border>
-
-            <!-- Mode: Expert (Log) -->
-            <Border Grid.Row="1" x:Name="pnlExpert" Visibility="Collapsed" Background="White" BorderBrush="#999" BorderThickness="1">
-                 <ScrollViewer x:Name="scrollLog">
-                    <TextBlock x:Name="txtLog" FontFamily="Consolas" FontSize="11" Foreground="#333" Padding="5" TextWrapping="Wrap"/>
-                 </ScrollViewer>
-            </Border>
-            
-            <!-- Progress Overlay -->
-            <StackPanel Grid.Row="1" VerticalAlignment="Bottom" Background="#F0F0F0" Margin="0,10,0,0">
-                <TextBlock x:Name="lblStatus" Text="Ready to Update." Margin="0,0,0,5"/>
-                <ProgressBar x:Name="progressBar" Height="15" Minimum="0" Maximum="100"/>
-            </StackPanel>
-
-            <!-- Footer / Controls -->
-            <Grid Grid.Row="2" Margin="0,15,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0" VerticalAlignment="Bottom">
-                    <Hyperlink Click="OnModeToggle">
-                        <TextBlock x:Name="linkMode" Text="Switch to Expert Mode"/>
-                    </Hyperlink>
-                </TextBlock>
-
-                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <Button x:Name="btnNext" Content="Next >" Width="75" Height="23" Margin="0,0,10,0" Click="btnCheck_Click"/>
-                    <Button x:Name="btnCancel" IsCancel="True" Content="Cancel" Width="75" Height="23" Click="btnExit_Click"/>
+                <!-- Header -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                    <TextBlock Text="Welcome to LiveUpdate Express"
+                               FontSize="18" FontWeight="Bold" Foreground="#333"/>
+                    <TextBlock Text="LiveUpdate Status"
+                               FontSize="12" Foreground="#666" Margin="0,5,0,0"/>
                 </StackPanel>
+
+                <!-- Mode: Wizard (List) -->
+                <Border Grid.Row="1" x:Name="pnlWizard" Visibility="Visible"
+                        Background="{StaticResource VsBrush.Panel}"
+                        BorderBrush="{StaticResource VsBrush.Border}"
+                        BorderThickness="1" CornerRadius="0">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="stkProducts" Margin="5">
+                            <TextBlock Text="Scanning for installed components..." Margin="5"/>
+                            <CheckBox IsChecked="True" IsEnabled="False" Content="SPYSCALP Trading System" Margin="5"/>
+                            <CheckBox IsChecked="True" IsEnabled="False" Content="LUPDATE Utility" Margin="5"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- Mode: Expert (Log) -->
+                <Border Grid.Row="1" x:Name="pnlExpert" Visibility="Collapsed"
+                        Background="{StaticResource VsBrush.Panel}"
+                        BorderBrush="{StaticResource VsBrush.Border}"
+                        BorderThickness="1">
+                     <ScrollViewer x:Name="scrollLog">
+                        <TextBlock x:Name="txtLog" FontFamily="Consolas" FontSize="11"
+                                   Foreground="#333" Padding="5" TextWrapping="Wrap"/>
+                     </ScrollViewer>
+                </Border>
+
+                <!-- Progress Bar -->
+                <StackPanel Grid.Row="1" VerticalAlignment="Bottom"
+                            Background="#F0F0F0" Margin="0,10,0,0">
+                    <ProgressBar x:Name="progressBar" Height="15" Minimum="0" Maximum="100"/>
+                </StackPanel>
+
+                <!-- Footer / Controls -->
+                <Grid Grid.Row="2" Margin="0,15,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" VerticalAlignment="Bottom">
+                        <Hyperlink Click="OnModeToggle">
+                            <TextBlock x:Name="linkMode" Text="Switch to Expert Mode"/>
+                        </Hyperlink>
+                    </TextBlock>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <Button x:Name="btnNext" Content="Next >" Width="75" Height="23"
+                                Margin="0,0,10,0" Click="btnCheck_Click"/>
+                        <Button x:Name="btnCancel" IsCancel="True" Content="Cancel"
+                                Width="75" Height="23" Click="btnExit_Click"/>
+                    </StackPanel>
+                </Grid>
             </Grid>
         </Grid>
-    </Grid>
-</Grid>
+    </DockPanel>
 </Window>

@@ -6,6 +6,9 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using LiveUpdate.Engine;
+using LiveUpdate.Engine.SignatureVerifiers;
+using LiveUpdate.UI;
 
 namespace LUpdate
 {
@@ -104,72 +107,57 @@ namespace LUpdate
         private void PerformUpdateCheck()
         {
             btnNext.IsEnabled = false;
-            Log("Initializing connection to " + (_config.ContainsKey("repo_url") ? "GitHub Releases" : "Update Server") + "...");
+            string repoUrl = _config.ContainsKey("repo_url") ? _config["repo_url"] : "";
+            Log("Initialize LiveUpdate engine with AppCast: " + repoUrl);
             progressBar.IsIndeterminate = true;
-            SetWizardImage("lupdate-progress.png"); // Checking
+            SetWizardImage("Graphics/lupdate-progress.png"); 
 
-            ThreadPool.QueueUserWorkItem(state =>
+            // Initialize LiveUpdate engine
+            // SecurityMode.Unsafe is used here as we are not providing public keys in this simple integration.
+            // In a real scenario, use Ed25519Checker with a public key.
+            var sparkle = new SparkleUpdater(repoUrl, new Ed25519Checker(LiveUpdate.Engine.Enums.SecurityMode.Unsafe))
             {
-                try
-                {
-                    Thread.Sleep(500);
-                    Log("Locating installed components...");
-                    Thread.Sleep(500);
-                    Log("Verified: SPYSCALP.exe");
-                    Log("Verified: LUPDATE.exe");
-                    
-                    Log("Connecting to repository...");
-                    using (WebClient client = new WebClient())
-                    {
-                         client.Headers.Add("User-Agent", "LUpdate-Utility");
-                         try 
-                         {
-                             Thread.Sleep(1500); // Simulate check
-                             Log("Manifest retrieved.");
-                             SetWizardImage("lupdate-progress.png"); // Analyzing
-                             
-                             string currentVer = _config.ContainsKey("current_version") ? _config["current_version"] : "0.0.0";
-                             string latestVer = "0.1.4"; // Mock logic as before
-                             
-                             Log("Checking versions (Local: " + currentVer + " | Remote: " + latestVer + ")...");
-                             
-                             Thread.Sleep(500);
-                             
-                             if (currentVer == latestVer)
-                             {
-                                 Log("Result: Your software is up to date.");
-                                 Dispatcher.Invoke(new Action(() => {
-                                     lblStatus.Text = "No updates found.";
-                                     progressBar.Value = 100;
-                                     SetWizardImage("lupdate-success.png"); // Finished
-                                 }));
-                             }
-                             else
-                             {
-                                 Log("Update found! Downloading...");
-                                 // Logic to download MSI would go here
-                             }
-                         }
-                         catch (Exception ex)
-                         {
-                             throw new Exception("Connection Failed: " + ex.Message);
-                         }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log("Error: " + ex.Message);
-                    SetWizardImage("lupdate-error.png");
-                }
-                finally
-                {
-                    Dispatcher.Invoke(new Action(() => 
-                    {
-                        progressBar.IsIndeterminate = false;
-                        btnNext.IsEnabled = true;
-                        btnNext.Content = "Finish";
-                    }));
-                }
+                UIFactory = new UIFactory(),
+                //RelaunchAfterUpdate = true,
+                //RestartApplication = true
+            };
+            
+            // Hook into events if we want to log to our main window
+            sparkle.UpdateDetected += (sender, args) => 
+            {
+                Log("Update detected: " + args.LatestVersion);
+                Dispatcher.Invoke(new Action(() => {
+                   progressBar.IsIndeterminate = false;
+                   progressBar.Value = 100;
+                   SetWizardImage("Graphics/lupdate-success.png"); 
+                }));
+            };
+            
+            sparkle.LoopFinished += (sender, args) =>
+            {
+                 Log("Update check finished.");
+                 Dispatcher.Invoke(new Action(() => {
+                    progressBar.IsIndeterminate = false;
+                    btnNext.IsEnabled = true;
+                    btnNext.Content = "Finish";
+                 }));
+            };
+            
+            sparkle.CloseApplication += () => 
+            {
+                Log("Application closing for update...");
+                Dispatcher.Invoke(new Action(() => {
+                    Application.Current.Shutdown();
+                }));
+            };
+
+            Log("Checking for updates...");
+            
+            // Run asynchronously
+            ThreadPool.QueueUserWorkItem(state => {
+                 // CheckForUpdatesAtUserRequest shows UI if update found, or 'up to date' message.
+                 // It manages its own UI.
+                 sparkle.CheckForUpdatesAtUserRequest();
             });
         }
         
@@ -177,7 +165,7 @@ namespace LUpdate
         {
             Dispatcher.Invoke(new Action(() => {
                 try {
-                    imgWizard.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri("pack://application:,,,/" + imageName));
+                    imgWizard.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri("pack://application:,,,/" + imageName.Replace("/", "\\"))); // Handle path separators for pack URIs
                 } catch {}
             }));
         }
@@ -219,6 +207,95 @@ namespace LUpdate
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        // =====================================================================
+        // Test UI Menu — Launch forked NetSparkle UI windows via UIFactory
+        // =====================================================================
+
+        private UIFactory GetTestFactory()
+        {
+            return new UIFactory();
+        }
+
+        private void OnTestUpdateAvailable(object sender, RoutedEventArgs e)
+        {
+            Log("Test UI: Update Available Window");
+            var factory = GetTestFactory();
+            var updates = new List<AppCastItem>
+            {
+                new AppCastItem()
+                {
+                    Title = "LiveUpdate v2.0.0",
+                    Version = "2.0.0",
+                    DownloadLink = "https://example.com/lupdate-2.0.0.msi",
+                    Description = "<h2>LiveUpdate v2.0.0</h2><ul><li>New feature: Check-only mode</li><li>Improved download progress</li><li>Bug fixes throughout</li></ul>",
+                    PublicationDate = DateTime.Now.AddDays(-1)
+                }
+            };
+            var window = factory.CreateUpdateAvailableWindow(updates, null, "1.0.0", "LiveUpdate");
+            (window as Window)?.ShowDialog();
+        }
+
+        private void OnTestDownloadProgress(object sender, RoutedEventArgs e)
+        {
+            Log("Test UI: Download Progress Window");
+            var factory = GetTestFactory();
+            var window = factory.CreateProgressWindow("Downloading LiveUpdate v2.0.0...", "Install and Relaunch");
+            (window as Window)?.ShowDialog();
+        }
+
+        private void OnTestCheckingForUpdates(object sender, RoutedEventArgs e)
+        {
+            Log("Test UI: Checking for Updates Window");
+            var factory = GetTestFactory();
+            var window = factory.ShowCheckingForUpdates();
+            (window as Window)?.ShowDialog();
+        }
+
+        private void OnTestToast(object sender, RoutedEventArgs e)
+        {
+            Log("Test UI: Toast Notification");
+            var factory = GetTestFactory();
+            factory.ShowToast(() =>
+            {
+                Dispatcher.Invoke(() => Log("Test UI: Toast was clicked!"));
+            });
+        }
+
+        private void OnTestVersionUpToDate(object sender, RoutedEventArgs e)
+        {
+            Log("Test UI: Version Is Up To Date");
+            var factory = GetTestFactory();
+            factory.ShowVersionIsUpToDate();
+        }
+
+        private void OnTestVersionSkipped(object sender, RoutedEventArgs e)
+        {
+            Log("Test UI: Version Skipped By User");
+            var factory = GetTestFactory();
+            factory.ShowVersionIsSkippedByUserRequest();
+        }
+
+        private void OnTestUnknownInstaller(object sender, RoutedEventArgs e)
+        {
+            Log("Test UI: Unknown Installer Format");
+            var factory = GetTestFactory();
+            factory.ShowUnknownInstallerFormatMessage("lupdate-setup.tar.gz");
+        }
+
+        private void OnTestCannotDownloadAppcast(object sender, RoutedEventArgs e)
+        {
+            Log("Test UI: Cannot Download Appcast");
+            var factory = GetTestFactory();
+            factory.ShowCannotDownloadAppcast("https://example.com/appcast.xml");
+        }
+
+        private void OnTestDownloadError(object sender, RoutedEventArgs e)
+        {
+            Log("Test UI: Download Error");
+            var factory = GetTestFactory();
+            factory.ShowDownloadErrorMessage("Connection timed out after 30 seconds", "https://example.com/lupdate-2.0.0.msi");
         }
     }
 }

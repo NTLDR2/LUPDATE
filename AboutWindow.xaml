@@ -16,7 +16,7 @@
             <Image Source="pack://application:,,,/LUPDATE.ico" Height="48" Width="48" Margin="0,0,15,0"/>
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Text="LiveUpdate Utility" FontWeight="Bold" FontSize="16"/>
-                <TextBlock Text="Version 0.1.0"/>
+                <TextBlock Text="Version 0.2.0"/>
             </StackPanel>
         </StackPanel>
 

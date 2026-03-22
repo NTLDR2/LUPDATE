@@ -29,6 +29,26 @@ namespace LUpdate
                 RunInCliMode();
                 Shutdown();
             }
+            else
+            {
+                // Show Splash Screen
+                SplashScreen splash = new SplashScreen();
+                splash.Show();
+                
+                // Use a background thread to wait so UI thread isn't blocked (though for splash it might not matter much if static)
+                // But better to keep UI responsive if we had animations. Here we just sleep.
+                // Since this is OnStartup, we need to be careful. if we sleep on UI thread, window won't render.
+                
+                System.Threading.Tasks.Task.Factory.StartNew(() => 
+                {
+                    System.Threading.Thread.Sleep(3000); 
+                }).ContinueWith(t => 
+                {
+                    MainWindow main = new MainWindow();
+                    main.Show();
+                    splash.Close();
+                }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
+            }
         }
 
         private void RunInCliMode()
@@ -37,7 +57,7 @@ namespace LUpdate
             AttachConsole(-1);
             
             Console.WriteLine("");
-            Console.WriteLine("LUPDATE CommandLine Interface v0.1.0");
+            Console.WriteLine("LUPDATE CommandLine Interface v0.2.0");
             Console.WriteLine("----------------------------------");
             Console.WriteLine("Initializing connection...");
             
@@ -48,7 +68,7 @@ namespace LUpdate
             System.Threading.Thread.Sleep(1000);
             Console.WriteLine("Connected to central repository.");
             Console.WriteLine("Component: SPYSCALP.exe ... v0.1.4 (Up to date)");
-            Console.WriteLine("Component: LUPDATE.exe ... v0.1.0 (Up to date)");
+            Console.WriteLine("Component: LUPDATE.exe ... v0.2.0 (Up to date)");
             Console.WriteLine("Check finished. Already up to date.");
             
             FreeConsole();
